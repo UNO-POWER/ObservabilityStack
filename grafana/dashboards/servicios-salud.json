@@ -1,0 +1,41 @@
+{
+  "title": "UNO Power-Ups Arena - Salud de Servicios (base HU-10)",
+  "uid": "uno-servicios-salud",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "refresh": "10s",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Requests HTTP por servicio (rate)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        { "expr": "sum by(job) (rate(http_server_requests_seconds_count[1m]))" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Latencia p95 por servicio",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        { "expr": "histogram_quantile(0.95, sum by(le, job) (rate(http_server_requests_seconds_bucket[5m])))" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Memoria JVM usada por servicio",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        { "expr": "sum by(job) (jvm_memory_used_bytes{area=\"heap\"})" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Servicios up/down",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        { "expr": "up" }
+      ]
+    }
+  ]
+}
