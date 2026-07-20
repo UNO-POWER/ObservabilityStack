@@ -6,7 +6,6 @@
 [![CI](https://github.com/UNO-POWER/ObservabilityStack/actions/workflows/ci.yml/badge.svg)](https://github.com/UNO-POWER/ObservabilityStack/actions/workflows/ci.yml)
 [![Prometheus](https://img.shields.io/badge/Prometheus-config--as--code-orange)]()
 [![Grafana](https://img.shields.io/badge/Grafana-dashboards--provisioned-brightgreen)]()
-[![License](https://img.shields.io/badge/license-MIT-blue)]()
 
 ---
 
@@ -28,8 +27,7 @@
 14. [Solución de problemas](#14-solución-de-problemas)
 15. [Roadmap](#15-roadmap)
 16. [Contribución](#16-contribución)
-17. [Licencia](#17-licencia)
-18. [Autor](#18-autor)
+17. [Autor](#17-autor)
 
 ---
 
@@ -37,14 +35,15 @@
 
 Este repositorio **no es un servicio Spring Boot** — es la configuración *as-code* del stack de
 observabilidad: qué scrapea Prometheus y qué dashboards provisiona Grafana automáticamente al
-arrancar. Se orquesta como dos contenedores más dentro del `docker-compose.yml` raíz del proyecto.
+arrancar. Se orquesta como dos contenedores más (Prometheus y Grafana) con Docker Compose, junto
+al resto de los servicios del sistema.
 
 ### Qué resuelve
 
 | Historia | Cómo |
 |---|---|
 | **HU-10** — Trazabilidad de requests entre servicios | El API Gateway genera/propaga `X-Trace-Id`; Prometheus + el dashboard `servicios-salud.json` dan la vista de salud (requests, latencia, JVM, up/down) de cada servicio |
-| **HU-11** — KPIs de negocio visibles para el equipo | 4 métricas de negocio instrumentadas en [Game Service](../GameService#17-observabilidad-y-kpis-hu-11) con Micrometer, visualizadas en `kpis-negocio.json` |
+| **HU-11** — KPIs de negocio visibles para el equipo | 4 métricas de negocio instrumentadas en [Game Service](https://github.com/UNO-POWER/GameService) con Micrometer, visualizadas en `kpis-negocio.json` |
 
 ---
 
@@ -95,8 +94,8 @@ git clone https://github.com/UNO-POWER/ObservabilityStack.git
 cd ObservabilityStack
 ```
 
-No hay build: los archivos se montan tal cual como volúmenes en los contenedores de Prometheus y
-Grafana, definidos en el `docker-compose.yml` raíz del monorepo de despliegue.
+No hay build: los archivos de este repositorio se montan tal cual como volúmenes en los
+contenedores de Prometheus y Grafana al orquestarlos con Docker Compose.
 
 ---
 
@@ -112,16 +111,16 @@ No hay variables de entorno propias de este repo — los targets de Prometheus u
 servicio de Docker Compose (`api-gateway`, `user-service`, etc.), que solo resuelven dentro de la
 red `uno-net` del compose.
 
-**Credenciales de Grafana:** por defecto `admin` / `admin` (definidas en el `docker-compose.yml`
-raíz, variables `GF_SECURITY_ADMIN_USER`/`GF_SECURITY_ADMIN_PASSWORD`) — cambiar en un despliegue
-real expuesto a Internet.
+**Credenciales de Grafana:** por defecto `admin` / `admin` (definidas al orquestar el contenedor,
+variables `GF_SECURITY_ADMIN_USER`/`GF_SECURITY_ADMIN_PASSWORD`) — cambiar en un despliegue real
+expuesto a Internet.
 
 ---
 
 ## 7. Ejecución
 
-Este stack **no se levanta solo** — es parte del `docker-compose.yml` raíz junto con los 4
-servicios backend:
+Este stack **no se levanta solo** — se orquesta con Docker Compose junto con los 4 servicios
+backend:
 
 ```bash
 # desde la raíz del monorepo
@@ -205,7 +204,7 @@ p50/p95/p99 de jugada→broadcast.
 ## 11. KPIs de negocio (HU-11)
 
 Las 4 métricas que alimentan este dashboard se generan en
-[Game Service](../GameService#17-observabilidad-y-kpis-hu-11), el único servicio con lógica de
+[Game Service](https://github.com/UNO-POWER/GameService), el único servicio con lógica de
 negocio suficientemente crítica para justificar métricas custom:
 
 | Métrica Prometheus | Panel que la usa | Query PromQL |
@@ -225,7 +224,7 @@ negocio suficientemente crítica para justificar métricas custom:
 ## 12. Trazabilidad (HU-10)
 
 El `X-Trace-Id` (generado/propagado por el API Gateway, ver
-[`APIGATEWAY/README.md`](../APIGATEWAY/README.md#12-logs-y-trazabilidad) viaja como header entre
+[`APIGATEWAY/README.md`](https://github.com/UNO-POWER/APIGATEWAY) viaja como header entre
 servicios y se incluye en los logs JSON de cada uno vía MDC de SLF4J. Este stack no centraliza
 logs (no hay ELK/Loki en el alcance actual — ver [§15 Roadmap](#15-roadmap)); la correlación hoy se
 hace buscando manualmente el mismo `traceId` en los logs de cada contenedor
@@ -235,9 +234,9 @@ hace buscando manualmente el mismo `traceId` en los logs de cada contenedor
 
 ## 13. Seguridad
 
-- Grafana y Prometheus **no se exponen** con puerto público en el despliegue de producción
-  (`deploy/docker-compose.prod.yml`) — solo accesibles dentro de la red interna o vía túnel SSH,
-  ya que ninguno de los dos tiene autenticación fuerte por defecto.
+- Grafana y Prometheus **no se exponen** con puerto público en el despliegue de producción —
+  solo accesibles dentro de la red interna o vía túnel SSH, ya que ninguno de los dos tiene
+  autenticación fuerte por defecto.
 - Las credenciales de Grafana (`admin`/`admin`) son las de desarrollo; deben cambiarse mediante
   variables de entorno si el stack se expone.
 
@@ -248,7 +247,7 @@ hace buscando manualmente el mismo `traceId` en los logs de cada contenedor
 | Síntoma | Causa probable | Solución |
 |---|---|---|
 | Grafana no muestra datos ("No Data") | Prometheus no puede alcanzar algún servicio, o el servicio no expone `/actuator/prometheus` | Revisar `http://localhost:9090/targets` — todos deben estar `UP` |
-| El dashboard no aparece en Grafana | El contenedor de Grafana no montó `grafana/dashboards/` correctamente | Verificar el volumen en `docker-compose.yml` y reiniciar el contenedor |
+| El dashboard no aparece en Grafana | El contenedor de Grafana no montó `grafana/dashboards/` correctamente | Verificar el montaje del volumen y reiniciar el contenedor |
 | KPI-2/KPI-4 muestran "No Data" recién iniciado el sistema | Aún no se ha completado ninguna partida — las métricas son contadores/histogramas que empiezan en 0 | Jugar una partida completa y esperar el siguiente scrape (5s) |
 | Cambié un `.json` de dashboard y no se refleja | `allowUiUpdates: true` permite que un cambio manual en la UI sobreviva hasta el siguiente `updateIntervalSeconds` (30s), pero puede haber quedado un dashboard editado en la UI tapando el archivo | Eliminar el dashboard desde la UI de Grafana y dejar que el provider lo recargue del archivo |
 
@@ -273,15 +272,7 @@ hace buscando manualmente el mismo `traceId` en los logs de cada contenedor
 
 ---
 
-## 17. Licencia
-
-MIT — ver [`LICENSE`](../LICENSE) en el repositorio raíz.
-
----
-
-## 18. Autor
+## 17. Autor
 
 **DUCU** — Desarrollador Full-Stack (individual), proyecto de la asignatura ARSW.
 Organización GitHub: [UNO-POWER](https://github.com/UNO-POWER).
-
-Repositorio raíz del sistema: **[UNO Power-Ups Arena](../README.md)**.
