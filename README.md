@@ -3,6 +3,7 @@
 > Configuración versionada de Prometheus y Grafana — observabilidad transversal de los 4
 > microservicios de **UNO Power-Ups Arena** (HU-10 y HU-11).
 
+[![CI](https://github.com/UNO-POWER/ObservabilityStack/actions/workflows/ci.yml/badge.svg)](https://github.com/UNO-POWER/ObservabilityStack/actions/workflows/ci.yml)
 [![Prometheus](https://img.shields.io/badge/Prometheus-config--as--code-orange)]()
 [![Grafana](https://img.shields.io/badge/Grafana-dashboards--provisioned-brightgreen)]()
 [![License](https://img.shields.io/badge/license-MIT-blue)]()
